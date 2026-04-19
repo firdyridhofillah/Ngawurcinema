@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NgawurCinema - Premium Streaming</title>
+    <title>NgawurCinema - Ngawur nih orang cik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@300;400;700&display=swap');
@@ -46,7 +46,7 @@
             <h1 class="font-netflix text-7xl md:text-9xl text-blue-nc blue-glow italic">NgawurCinema</h1>
         </div>
         <div id="splash-2" class="text-center mt-12 opacity-0 transition-all duration-1000 absolute flex flex-col items-center">
-            <p class="text-[9px] tracking-[0.6em] text-zinc-500 mb-6 font-bold uppercase">POWERED BY</p>
+            <p class="text-[9px] tracking-[0.6em] text-zinc-500 mb-6 font-bold uppercase">DATA POWERED BY</p>
             <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" class="w-12 md:w-16 opacity-80">
         </div>
     </div>
@@ -84,7 +84,7 @@
             </div>
         </header>
         <main class="px-12 -mt-20 relative z-20 pb-20">
-            <h3 class="font-netflix text-2xl mb-8 tracking-widest text-blue-nc italic uppercase">Trending Pekan Ini</h3>
+            <h3 class="font-netflix text-2xl mb-8 tracking-widest text-blue-nc italic uppercase">Trending Hari Ini</h3>
             <div id="movie-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
         </main>
     </div>
@@ -120,7 +120,7 @@
         </section>
         <footer class="p-12 border-t border-white/5 bg-zinc-950 flex flex-col items-center">
              <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" class="w-10 mb-4">
-             <p class="text-[9px] text-zinc-600 text-center tracking-widest font-bold uppercase">Data provided by TMDB API</p>
+             <p class="text-[9px] text-zinc-600 text-center tracking-widest font-bold uppercase">Official 111Movies Engine Integration</p>
         </footer>
     </div>
 
@@ -129,8 +129,8 @@
             <span id="player-movie-title" class="font-netflix text-2xl text-blue-nc italic uppercase tracking-wider">...</span>
             <div class="flex items-center gap-4">
                 <div class="flex bg-zinc-900 rounded p-1 border border-white/5">
-                    <button onclick="changeServer(1)" id="srv-1" class="px-5 py-1.5 rounded text-[10px] font-bold bg-blue-nc">SERVER 1 (BEST SUB)</button>
-                    <button onclick="changeServer(2)" id="srv-2" class="px-5 py-1.5 rounded text-[10px] font-bold">SERVER 2</button>
+                    <button onclick="changeServer(1)" id="srv-1" class="px-5 py-1.5 rounded text-[10px] font-bold bg-blue-nc">SERVER 1 (111MOVIES)</button>
+                    <button onclick="changeServer(2)" id="srv-2" class="px-5 py-1.5 rounded text-[10px] font-bold">SERVER 2 (BACKUP)</button>
                 </div>
                 <button onclick="closePlayer()" class="bg-red-600 px-8 py-2 rounded text-[10px] font-bold uppercase hover:bg-red-700">Tutup</button>
             </div>
@@ -140,7 +140,7 @@
         </div>
         <div class="bg-zinc-950 p-4 text-center">
             <p class="text-[11px] text-blue-nc font-bold uppercase tracking-[0.3em] animate-pulse">
-                Pilih server 1 untuk Subtitle Indonesia terbaik. Klik ikon CC di player.
+                SUBTITLE OTOMATIS AKTIF VIA 111MOVIES ENGINE
             </p>
         </div>
     </div>
@@ -221,6 +221,7 @@
         }
 
         async function openMovie(id) {
+            // Kita ambil data lengkap termasuk ID IMDB untuk jaga-jaga
             const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=id-ID&append_to_response=credits,recommendations,videos`);
             currentMovie = await res.json();
             document.getElementById('detail-backdrop').style.backgroundImage = `url('${ORI_URL + (currentMovie.backdrop_path || currentMovie.poster_path)}')`;
@@ -228,7 +229,7 @@
             document.getElementById('detail-year').innerText = currentMovie.release_date.split('-')[0];
             document.getElementById('detail-runtime').innerText = currentMovie.runtime + " MIN";
             document.getElementById('detail-vote').innerText = currentMovie.vote_average.toFixed(1);
-            document.getElementById('detail-desc').innerText = currentMovie.overview || "No description available.";
+            document.getElementById('detail-desc').innerText = currentMovie.overview || "No description.";
             const castBox = document.getElementById('cast-list');
             castBox.innerHTML = '';
             currentMovie.credits.cast.slice(0, 8).forEach(c => {
@@ -250,13 +251,17 @@
 
         function changeServer(num) {
             const iframe = document.getElementById('main-iframe');
-            document.getElementById('srv-1').classList.remove('bg-blue-nc');
-            document.getElementById('srv-2').classList.remove('bg-blue-nc');
+            document.querySelectorAll('[id^="srv-"]').forEach(btn => btn.classList.remove('bg-blue-nc'));
             document.getElementById(`srv-${num}`).classList.add('bg-blue-nc');
             
-            // IMPLEMENTASI 111MOVIE / 2EMBED
-            if(num === 1) iframe.src = `https://www.2embed.cc/embed/${currentMovie.id}`;
-            if(num === 2) iframe.src = `https://vidsrc.to/embed/movie/${currentMovie.id}`;
+            // SESUAI DOKUMENTASI: https://111movies.net/movie/{id}
+            if(num === 1) {
+                // Gunakan TMDB ID dari currentMovie
+                iframe.src = `https://111movies.net/movie/${currentMovie.id}`;
+            }
+            if(num === 2) {
+                iframe.src = `https://vidsrc.me/embed/movie?tmdb=${currentMovie.id}`;
+            }
         }
 
         function openTrailerPop() {
