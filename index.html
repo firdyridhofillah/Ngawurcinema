@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteStream - Netflix Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #141414;
+        color: white;
+        font-family: "Roboto", sans-serif;
+        overflow-x: hidden;
+      }
+      .netflix-card {
+        transition: transform 0.3s ease;
+      }
+      .netflix-card:hover {
+        transform: scale(1.1);
+        z-index: 10;
+      }
+      .hero-gradient {
+        background: linear-gradient(to top, #141414, transparent);
+      }
+      /* Hide scrollbar */
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      class="fixed top-0 w-full z-50 p-6 flex justify-between items-center bg-gradient-to-b from-black to-transparent"
+    >
+      <h1
+        class="text-3xl font-extrabold text-red-600 tracking-tighter uppercase"
+      >
+        ByteStream
+      </h1>
+      <div class="relative w-1/3">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Film, acara TV..."
+          class="w-full bg-black/50 border border-white/30 py-2 px-10 rounded text-sm focus:outline-none focus:border-white"
+        />
+        <svg
+          class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          ></path>
+        </svg>
+
+        <div
+          id="prediction-box"
+          class="absolute top-full mt-2 w-full bg-[#141414] border border-gray-700 rounded shadow-2xl hidden overflow-hidden"
+        ></div>
+      </div>
+    </nav>
+
+    <main class="pt-32 px-12">
+      <h2 id="section-title" class="text-2xl font-bold mb-6">
+        Populer di ByteStream
+      </h2>
+      <div
+        id="movie-grid"
+        class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
+      ></div>
+    </main>
+
+    <div
+      id="player-modal"
+      class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+    >
+      <div
+        class="bg-[#181818] w-full max-w-5xl rounded-lg overflow-hidden relative shadow-2xl"
+      >
+        <div
+          class="p-4 flex justify-between items-center border-b border-gray-800"
+        >
+          <h3 id="modal-title" class="text-xl font-bold truncate">
+            Judul Film
+          </h3>
+          <button
+            onclick="closeModal()"
+            class="text-white hover:text-red-600 text-2xl font-bold"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="relative pt-[56.25%] bg-black">
+          <iframe
+            id="main-iframe"
+            class="absolute inset-0 w-full h-full"
+            src=""
+            frameborder="0"
+            allowfullscreen
+          ></iframe>
+        </div>
+
+        <div class="p-6">
+          <p class="text-sm text-gray-400 mb-3 font-bold">
+            GANTI SERVER JIKA ERROR:
+          </p>
+          <div class="flex gap-3">
+            <button
+              id="srv-1"
+              class="bg-white text-black px-4 py-1 rounded font-bold hover:bg-gray-300"
+            >
+              Server 1
+            </button>
+            <button
+              id="srv-2"
+              class="bg-gray-700 text-white px-4 py-1 rounded font-bold hover:bg-gray-600"
+            >
+              Server 2
+            </button>
+            <button
+              id="srv-3"
+              class="bg-gray-700 text-white px-4 py-1 rounded font-bold hover:bg-gray-600"
+            >
+              Server 3
+            </button>
+          </div>
+          <p class="mt-4 text-xs text-gray-500 italic">
+            *Server 2 & 3 biasanya memiliki database cadangan yang lebih
+            lengkap.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_KEY = "4eea9569"; // GANTI INI
+      const searchInput = document.getElementById("search-input");
+      const predictionBox = document.getElementById("prediction-box");
+      const movieGrid = document.getElementById("movie-grid");
+      const modal = document.getElementById("player-modal");
+      const iframe = document.getElementById("main-iframe");
+      const modalTitle = document.getElementById("modal-title");
+
+      let currentImdbID = "";
+
+      // 1. LIVE SEARCH (Prediksi)
+      searchInput.addEventListener("input", async (e) => {
+        const val = e.target.value;
+        if (val.length < 3) {
+          predictionBox.classList.add("hidden");
+          return;
+        }
+
+        try {
+          const res = await fetch(
+            `https://www.omdbapi.com/?apikey=${API_KEY}&s=${val}`,
+          );
+          const data = await res.json();
+          if (data.Search) {
+            showPredictions(data.Search);
+          }
+        } catch (err) {}
+      });
+
+      function showPredictions(movies) {
+        predictionBox.innerHTML = "";
+        predictionBox.classList.remove("hidden");
+        movies.slice(0, 5).forEach((m) => {
+          const div = document.createElement("div");
+          div.className =
+            "p-3 hover:bg-gray-800 cursor-pointer flex items-center gap-3 border-b border-gray-800";
+          div.innerHTML = `<img src="${m.Poster}" class="w-10 h-14 object-cover"> <div><p class="text-sm font-bold">${m.Title}</p><p class="text-xs text-gray-400">${m.Year}</p></div>`;
+          div.onclick = () => {
+            searchInput.value = m.Title;
+            predictionBox.classList.add("hidden");
+            loadMainGrid(m.Title);
+          };
+          predictionBox.appendChild(div);
+        });
+      }
+
+      // 2. LOAD MAIN GRID
+      async function loadMainGrid(query) {
+        const res = await fetch(
+          `https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`,
+        );
+        const data = await res.json();
+        if (!data.Search) return;
+
+        document.getElementById("section-title").innerText =
+          `Hasil untuk: ${query}`;
+        movieGrid.innerHTML = "";
+        data.Search.forEach((m) => {
+          const card = document.createElement("div");
+          card.className = "netflix-card cursor-pointer";
+          card.innerHTML = `
+                    <div class="relative rounded overflow-hidden shadow-lg mb-2">
+                        <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" class="w-full h-64 object-cover">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <span class="bg-red-600 p-2 rounded-full">▶</span>
+                        </div>
+                    </div>
+                    <p class="text-sm font-bold truncate">${m.Title}</p>
+                `;
+          card.onclick = () => openPlayer(m.imdbID, m.Title);
+          movieGrid.appendChild(card);
+        });
+      }
+
+      // 3. MULTI-SERVER PLAYER
+      function openPlayer(id, title) {
+        currentImdbID = id;
+        modalTitle.innerText = title;
+        setServer(1);
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.body.style.overflow = "hidden";
+      }
+
+      function setServer(num) {
+        let url = "";
+        if (num === 1) url = `https://vidsrc.to/embed/movie/${currentImdbID}`;
+        if (num === 2) url = `https://www.2embed.cc/embed/${currentImdbID}`;
+        if (num === 3) url = `https://vidsrc.xyz/embed/movie/${currentImdbID}`;
+
+        iframe.src = url;
+
+        // UI Button styling
+        [1, 2, 3].forEach((i) => {
+          const btn = document.getElementById(`srv-${i}`);
+          btn.className =
+            i === num
+              ? "bg-white text-black px-4 py-1 rounded font-bold"
+              : "bg-gray-700 text-white px-4 py-1 rounded font-bold hover:bg-gray-600";
+        });
+      }
+
+      document.getElementById("srv-1").onclick = () => setServer(1);
+      document.getElementById("srv-2").onclick = () => setServer(2);
+      document.getElementById("srv-3").onclick = () => setServer(3);
+
+      function closeModal() {
+        modal.classList.add("hidden");
+        iframe.src = "";
+        document.body.style.overflow = "auto";
+      }
+
+      // Close prediction if click outside
+      window.onclick = (e) => {
+        if (!e.target.matches("#search-input"))
+          predictionBox.classList.add("hidden");
+      };
+
+      // Initial Load
+      loadMainGrid("Batman");
+    </script>
+  </body>
+</html>
