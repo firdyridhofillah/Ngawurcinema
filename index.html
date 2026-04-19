@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NgawurCinema</title>
+    <title>NgawurCinema - Premium Streaming</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@300;400;700&display=swap');
@@ -11,16 +11,14 @@
         body { background-color: #020202; color: white; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
         .font-netflix { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; }
         
-        /* Splash hanya muncul jika belum ada session */
         #splash {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: none; flex-direction: column; align-items: center; justify-content: center;
         }
         
-        /* Welcome Popup */
         #welcome-popup {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 11000;
-            display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 11000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px);
         }
 
         .text-blue-nc { color: #0066ff; }
@@ -28,17 +26,17 @@
         .blue-glow { text-shadow: 0 0 20px rgba(0,102,255,0.6); }
 
         .movie-card { 
-            transition: all 0.3s ease; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             cursor: pointer; background: #111; border-radius: 8px; 
             overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
         }
-        .movie-card:hover { transform: scale(1.05); border-color: #0066ff; z-index: 50; }
+        .movie-card:hover { transform: scale(1.05); border-color: #0066ff; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
         .hide-scroll::-webkit-scrollbar { display: none; }
         #detail-page, #video-overlay, #search-page { display: none; }
         #video-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; }
         
-        .hero-slide { transition: opacity 1s ease-in-out; }
+        #search-suggestion { max-height: 400px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -48,22 +46,22 @@
             <h1 class="font-netflix text-7xl md:text-9xl text-blue-nc blue-glow italic">NgawurCinema</h1>
         </div>
         <div id="splash-2" class="text-center mt-12 opacity-0 transition-all duration-1000 absolute flex flex-col items-center">
-            <p class="text-[9px] tracking-[0.6em] text-zinc-500 mb-6 font-bold uppercase">DATA POWERED BY</p>
-            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" class="w-12 md:w-16 opacity-80">
+            <p class="text-[9px] tracking-[0.6em] text-zinc-500 mb-6 font-bold uppercase">POWERED BY TMDB</p>
+            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" class="w-12 opacity-80">
         </div>
     </div>
 
     <div id="welcome-popup">
-        <div class="bg-zinc-900 p-8 md:p-12 rounded-2xl border border-blue-nc/30 text-center max-w-lg mx-4 shadow-[0_0_50px_rgba(0,102,255,0.2)]">
-            <h2 class="font-netflix text-4xl text-blue-nc mb-4 italic">Halo & Selamat Menonton!</h2>
-            <div class="space-y-1 text-zinc-400 text-sm mb-8 font-bold uppercase tracking-widest">
-                <p>Akbar Aridani Setiawan</p>
-                <p>Fairus Rasidin</p>
-                <p>Firdy Ridho Fillah</p>
-                <p>Faeyza Ardellein Yaradhitya</p>
-                <p>Malfaluna Rahmah</p>
+        <div class="bg-zinc-900/80 p-10 md:p-14 rounded-3xl border border-blue-nc/20 text-center max-w-lg mx-4 shadow-2xl">
+            <h2 class="font-netflix text-5xl text-blue-nc mb-6 italic">Halo & Selamat Menonton!</h2>
+            <div class="space-y-2 text-zinc-300 text-xs font-bold uppercase tracking-[0.3em] mb-10 leading-loose">
+                <p class="hover:text-white transition">Akbar Aridani Setiawan</p>
+                <p class="hover:text-white transition">Fairus Rasidin</p>
+                <p class="hover:text-white transition">Firdy Ridho Fillah</p>
+                <p class="hover:text-white transition">Faeyza Ardellein Yaradhitya</p>
+                <p class="hover:text-white transition">Malfaluna Rahmah</p>
             </div>
-            <button onclick="closeWelcome()" class="bg-blue-nc px-12 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:scale-105 transition">Masuk Gallery</button>
+            <button onclick="closeWelcome()" class="bg-blue-nc px-14 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] hover:scale-110 transition shadow-lg shadow-blue-nc/20">Masuk Gallery</button>
         </div>
     </div>
 
@@ -71,56 +69,59 @@
         <div class="flex items-center gap-10">
             <h1 onclick="location.reload()" class="font-netflix text-4xl text-blue-nc cursor-pointer blue-glow italic">NgawurCinema</h1>
             <div class="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                <button onclick="location.reload()" class="hover:text-blue-nc transition">Home</button>
-                <button onclick="executeSearch('trending')" class="hover:text-blue-nc transition">Movies</button>
+                <button onclick="location.reload()" class="hover:text-white transition">Home</button>
+                <button onclick="executeSearch('trending')" class="hover:text-white transition">Explore</button>
             </div>
         </div>
         
-        <div class="flex items-center gap-6 w-1/3 justify-end">
+        <div class="flex items-center gap-6 w-1/3 justify-end relative">
             <div class="relative w-full">
-                <input type="text" id="search-input" onkeyup="handleSearchInput(event)" placeholder="Cari film..." class="w-full bg-zinc-900/50 border border-zinc-800 py-2 px-10 rounded text-xs focus:border-blue-nc outline-none text-white">
+                <input type="text" id="search-input" onkeyup="handleSearchInput(event)" placeholder="Cari film favoritmu..." class="w-full bg-zinc-900/80 border border-white/10 py-2.5 px-10 rounded-full text-xs focus:border-blue-nc outline-none text-white transition-all">
+                <div id="search-suggestion" class="absolute top-full mt-3 w-full bg-zinc-900 border border-white/10 rounded-xl hidden shadow-2xl z-[1100] backdrop-blur-xl"></div>
             </div>
-            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" class="w-8">
         </div>
     </nav>
 
     <div id="home-page" class="opacity-0 transition-opacity duration-1000">
         <header id="hero-slider" class="h-[85vh] relative flex items-center px-12 overflow-hidden">
-            <div id="hero-bg" class="absolute inset-0 bg-cover bg-center transition-all duration-1000 scale-105"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-[#020202] via-[#020202]/40 to-transparent"></div>
+            <div id="hero-bg" class="absolute inset-0 bg-cover bg-center transition-all duration-1000 scale-100"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-[#020202] via-[#020202]/50 to-transparent"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent"></div>
             <div class="relative z-10 max-w-3xl">
-                <h2 id="hero-title" class="font-netflix text-6xl md:text-8xl mb-6 uppercase italic leading-[0.9] opacity-0 transition-all duration-700 translate-y-10">...</h2>
-                <p id="hero-desc" class="text-zinc-300 text-lg line-clamp-3 mb-10 max-w-xl opacity-0 transition-all duration-700 translate-y-10 delay-100"></p>
-                <div class="opacity-0 transition-all duration-700 translate-y-10 delay-200">
-                    <button id="hero-btn" class="bg-blue-nc px-10 py-3 rounded font-bold text-xs uppercase tracking-widest hover:scale-105 transition">Tonton Sekarang</button>
-                </div>
+                <h2 id="hero-title" class="font-netflix text-6xl md:text-8xl mb-6 uppercase italic leading-[0.9] transition-all duration-700">...</h2>
+                <p id="hero-desc" class="text-zinc-300 text-lg line-clamp-3 mb-10 max-w-xl transition-all duration-700 delay-100"></p>
+                <button id="hero-btn" class="bg-blue-nc px-12 py-4 rounded font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition">▶ Tonton Sekarang</button>
             </div>
         </header>
 
-        <main class="px-12 -mt-20 relative z-20 pb-20">
-            <h3 class="font-netflix text-2xl mb-8 tracking-widest text-blue-nc italic uppercase">Trending Hari Ini</h3>
+        <main class="px-12 -mt-24 relative z-20 pb-20">
+            <h3 class="font-netflix text-2xl mb-8 tracking-widest text-blue-nc italic uppercase">Lagi Rame Hari Ini</h3>
             <div id="movie-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
         </main>
     </div>
 
+    <div id="search-page" class="pt-32 px-12 pb-20">
+        <h3 id="search-title-text" class="font-netflix text-3xl mb-12 text-blue-nc italic uppercase border-l-4 border-blue-nc pl-4">Hasil Pencarian</h3>
+        <div id="search-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
+    </div>
+
     <div id="detail-page">
-        <section class="min-h-screen relative flex items-center px-6 md:px-16 py-32 overflow-hidden">
-            <div id="detail-backdrop" class="absolute inset-0 bg-cover bg-center opacity-30"></div>
+        <section class="min-h-[90vh] relative flex items-center px-6 md:px-16 py-32">
+            <div id="detail-backdrop" class="absolute inset-0 bg-cover bg-center opacity-40"></div>
             <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent"></div>
             <div class="absolute right-10 md:right-40 top-1/2 -translate-y-1/2 z-50">
-                <button onclick="openPlayer()" class="w-32 h-32 md:w-48 md:h-48 bg-blue-nc rounded-full flex items-center justify-center shadow-[0_0_100px_rgba(0,102,255,0.4)] hover:scale-110 transition group">
+                <button onclick="openPlayer()" class="w-32 h-32 md:w-48 md:h-48 bg-blue-nc rounded-full flex items-center justify-center shadow-[0_0_80px_rgba(0,102,255,0.4)] hover:scale-110 transition group">
                     <span class="text-6xl ml-4 text-white group-hover:animate-pulse">▶</span>
                 </button>
             </div>
             <div class="relative z-10 max-w-4xl">
                 <h1 id="detail-title" class="font-netflix text-6xl md:text-9xl mb-8 uppercase italic leading-[0.85]">...</h1>
                 <div class="flex gap-4 mb-10">
-                    <button onclick="openTrailerPop()" class="bg-white text-black px-10 py-3 rounded font-bold text-xs uppercase hover:bg-zinc-200 transition">▷ Trailer</button>
+                    <button onclick="openTrailerPop()" class="bg-white text-black px-10 py-3 rounded font-bold text-[10px] uppercase tracking-widest hover:bg-zinc-200 transition">▷ Trailer</button>
                 </div>
-                <div class="flex flex-wrap items-center gap-6 text-[13px] font-bold mb-10 text-zinc-300 uppercase">
-                    <span id="detail-year" class="bg-zinc-800 px-3 py-1 rounded">...</span>
+                <div class="flex flex-wrap items-center gap-6 text-[12px] font-bold mb-10 text-zinc-300 uppercase tracking-widest">
+                    <span id="detail-year" class="bg-zinc-800/80 px-4 py-1.5 rounded-full">...</span>
                     <span id="detail-runtime" class="text-blue-nc">...</span>
                     <span class="text-yellow-500">★ <span id="detail-vote">...</span></span>
                 </div>
@@ -129,28 +130,18 @@
             </div>
         </section>
 
-        <section class="px-12 py-20 bg-black">
-            <h3 class="font-netflix text-2xl mb-8 tracking-widest text-blue-nc italic uppercase">Film Terkait</h3>
+        <section class="px-12 py-20 bg-[#020202]">
+            <h3 class="font-netflix text-2xl mb-10 tracking-widest text-blue-nc italic uppercase">Film Terkait</h3>
             <div id="recommend-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
         </section>
-
-        <footer class="p-12 border-t border-white/5 bg-zinc-950 flex flex-col items-center">
-             <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" class="w-10 mb-4">
-             <p class="text-[9px] text-zinc-600 text-center tracking-widest font-bold uppercase">Official 111Movies Engine Integration</p>
-        </footer>
-    </div>
-
-    <div id="search-page" class="pt-32 px-12 pb-20">
-        <h3 id="search-title" class="font-netflix text-3xl mb-12 text-blue-nc italic uppercase border-l-4 border-blue-nc pl-4">Hasil Pencarian</h3>
-        <div id="search-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
     </div>
 
     <div id="video-overlay">
-        <div class="h-16 flex justify-between items-center px-8 bg-black border-b border-white/10">
-            <span id="player-movie-title" class="font-netflix text-2xl text-blue-nc italic">...</span>
-            <button onclick="closePlayer()" class="bg-red-600 px-8 py-2 rounded text-[10px] font-bold uppercase">Tutup</button>
+        <div class="h-20 flex justify-between items-center px-10 bg-black border-b border-white/5">
+            <span id="player-movie-title" class="font-netflix text-3xl text-blue-nc italic tracking-wider">...</span>
+            <button onclick="closePlayer()" class="bg-zinc-900 border border-white/10 px-10 py-2.5 rounded-full text-[10px] font-bold uppercase hover:bg-red-600 transition">Tutup Player</button>
         </div>
-        <div class="flex-1 bg-black">
+        <div class="flex-1">
             <iframe id="main-iframe" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>
         </div>
     </div>
@@ -167,7 +158,6 @@
 
         window.onload = () => {
             const hasSeenSplash = sessionStorage.getItem('seenSplash');
-            
             if (!hasSeenSplash) {
                 const splash = document.getElementById('splash');
                 splash.style.display = 'flex';
@@ -209,6 +199,63 @@
             }, 500);
         }
 
+        // --- SEARCH LOGIC ---
+        async function handleSearchInput(e) {
+            const q = e.target.value;
+            const box = document.getElementById('search-suggestion');
+            
+            if (q.length < 2) {
+                box.classList.add('hidden');
+                return;
+            }
+
+            if (e.key === "Enter") {
+                box.classList.add('hidden');
+                executeSearch(q);
+                return;
+            }
+
+            const res = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${q}&language=id-ID`);
+            const data = await res.json();
+            
+            box.innerHTML = '';
+            box.classList.remove('hidden');
+            
+            data.results.slice(0, 6).forEach(m => {
+                const div = document.createElement('div');
+                div.className = "p-4 hover:bg-blue-nc/20 cursor-pointer flex items-center gap-4 border-b border-white/5 last:border-0";
+                div.innerHTML = `
+                    <img src="${m.poster_path ? IMG_URL + m.poster_path : 'https://via.placeholder.com/50'}" class="w-10 h-14 object-cover rounded shadow">
+                    <div>
+                        <p class="text-[12px] font-bold uppercase italic leading-tight">${m.title}</p>
+                        <p class="text-[9px] text-zinc-500 mt-1">${m.release_date ? m.release_date.split('-')[0] : 'N/A'}</p>
+                    </div>
+                `;
+                div.onclick = () => {
+                    box.classList.add('hidden');
+                    openMovie(m.id);
+                };
+                box.appendChild(div);
+            });
+        }
+
+        async function executeSearch(q) {
+            let url = q === 'trending' 
+                ? `${BASE_URL}/trending/movie/day?api_key=${API_KEY}&language=id-ID`
+                : `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${q}&language=id-ID`;
+            
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            renderMovies(data.results, 'search-grid');
+            document.getElementById('home-page').style.display = 'none';
+            document.getElementById('detail-page').style.display = 'none';
+            document.getElementById('search-page').style.display = 'block';
+            document.getElementById('search-title-text').innerText = `Hasil untuk: ${q}`;
+            window.scrollTo(0, 0);
+        }
+
+        // --- CONTENT LOGIC ---
         async function getTrending() {
             const res = await fetch(`${BASE_URL}/trending/movie/day?api_key=${API_KEY}&language=id-ID`);
             const data = await res.json();
@@ -220,19 +267,21 @@
         function startHeroSlider() {
             updateHero();
             setInterval(() => {
-                heroIndex = (heroIndex + 1) % 5; // Slide top 5 movies
+                heroIndex = (heroIndex + 1) % 5;
                 updateHero();
-            }, 6000);
+            }, 7000);
         }
 
         function updateHero() {
             const m = trendingMovies[heroIndex];
+            if(!m) return;
             const title = document.getElementById('hero-title');
             const desc = document.getElementById('hero-desc');
             const bg = document.getElementById('hero-bg');
             const btn = document.getElementById('hero-btn');
 
-            title.style.opacity = '0'; desc.style.opacity = '0';
+            title.style.opacity = '0'; 
+            desc.style.opacity = '0';
             
             setTimeout(() => {
                 bg.style.backgroundImage = `url('${ORI_URL + m.backdrop_path}')`;
@@ -240,8 +289,8 @@
                 desc.innerText = m.overview;
                 btn.onclick = () => openMovie(m.id);
                 
-                title.style.opacity = '1'; title.style.transform = 'translateY(0)';
-                desc.style.opacity = '1'; desc.style.transform = 'translateY(0)';
+                title.style.opacity = '1';
+                desc.style.opacity = '1';
             }, 700);
         }
 
@@ -251,12 +300,12 @@
             
             document.getElementById('detail-backdrop').style.backgroundImage = `url('${ORI_URL + currentMovie.backdrop_path}')`;
             document.getElementById('detail-title').innerText = currentMovie.title;
-            document.getElementById('detail-year').innerText = currentMovie.release_date.split('-')[0];
-            document.getElementById('detail-runtime').innerText = currentMovie.runtime + " MIN";
+            document.getElementById('detail-year').innerText = currentMovie.release_date ? currentMovie.release_date.split('-')[0] : '-';
+            document.getElementById('detail-runtime').innerText = currentMovie.runtime + " MENIT";
             document.getElementById('detail-vote').innerText = currentMovie.vote_average.toFixed(1);
-            document.getElementById('detail-desc').innerText = currentMovie.overview || "No description.";
+            document.getElementById('detail-desc').innerText = currentMovie.overview || "Tidak ada deskripsi.";
             
-            // Render Rekomendasi
+            // Rekomendasi (Terkait)
             renderMovies(currentMovie.recommendations.results.slice(0, 12), 'recommend-grid');
 
             document.getElementById('home-page').style.display = 'none';
@@ -272,7 +321,13 @@
                 if(!m.poster_path) return;
                 const card = document.createElement('div');
                 card.className = "movie-card";
-                card.innerHTML = `<img src="${IMG_URL + m.poster_path}" class="w-full aspect-[2/3] object-cover"><div class="p-3"><h4 class="text-[10px] font-bold uppercase truncate italic">${m.title}</h4></div>`;
+                card.innerHTML = `
+                    <img src="${IMG_URL + m.poster_path}" class="w-full aspect-[2/3] object-cover">
+                    <div class="p-4 bg-zinc-900/40">
+                        <h4 class="text-[10px] font-bold uppercase truncate italic leading-tight">${m.title}</h4>
+                        <p class="text-[8px] text-blue-nc font-bold mt-1 tracking-widest">${m.release_date ? m.release_date.split('-')[0] : ''}</p>
+                    </div>
+                `;
                 card.onclick = () => openMovie(m.id);
                 target.appendChild(card);
             });
@@ -284,16 +339,17 @@
             document.getElementById('main-iframe').src = `https://111movies.net/movie/${currentMovie.id}`;
         }
 
-        function closePlayer() { document.getElementById('video-overlay').style.display = 'none'; document.getElementById('main-iframe').src = ''; }
-        
-        async function executeSearch(q) {
-            const res = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${q}&language=id-ID`);
-            const data = await res.json();
-            renderMovies(data.results, 'search-grid');
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('detail-page').style.display = 'none';
-            document.getElementById('search-page').style.display = 'block';
+        function closePlayer() { 
+            document.getElementById('video-overlay').style.display = 'none'; 
+            document.getElementById('main-iframe').src = ''; 
         }
+
+        // Tambahan untuk menutup suggestion saat klik di mana saja
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#search-input')) {
+                document.getElementById('search-suggestion').classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
