@@ -1,355 +1,767 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NgawurCinema</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@300;400;700&display=swap');
-        
-        body { background-color: #020202; color: white; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
-        .font-netflix { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; }
-        
-        #splash {
-            position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-        }
-        
-        #welcome-popup {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 11000;
-            display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px);
-        }
+      @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap");
+      body {
+        background-color: #050505;
+        color: white;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        margin: 0;
+        overflow-x: hidden;
+      }
+      .font-netflix {
+        font-family: "Bebas Neue", sans-serif;
+        letter-spacing: 1px;
+      }
 
-        .text-blue-nc { color: #0066ff; }
-        .bg-blue-nc { background-color: #0066ff; }
-        .blue-glow { text-shadow: 0 0 20px rgba(0,102,255,0.6); }
+      #search-page,
+      #detail-page,
+      #video-overlay,
+      #trailer-overlay {
+        display: none;
+      }
 
-        .movie-card { 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            cursor: pointer; background: #111; border-radius: 8px; 
-            overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+      /* Card UI */
+      .movie-card {
+        min-width: 160px;
+        transition: 0.4s;
+        cursor: pointer;
+        background: #111;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        height: 240px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        flex-shrink: 0;
+      }
+      .movie-card:hover {
+        transform: scale(1.05);
+        border-color: #0066ff;
+        z-index: 10;
+        box-shadow: 0 0 25px rgba(0, 102, 255, 0.4);
+      }
+
+      .card-type {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        font-size: 8px;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 20;
+        color: #0066ff;
+        text-transform: uppercase;
+      }
+      .card-status {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 8px;
+        font-weight: 900;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #0066ff;
+        z-index: 20;
+      }
+      .status-soon {
+        background: #e11d48 !important;
+      }
+
+      /* Mobile Search Expand */
+      .search-container {
+        transition: all 0.4s ease;
+        width: 180px;
+      }
+      @media (max-width: 768px) {
+        .search-container:focus-within {
+          width: 100% !important;
+          position: absolute;
+          left: 0;
+          right: 0;
+          padding: 0 15px;
+          z-index: 3000;
         }
-        .movie-card:hover { transform: scale(1.05); border-color: #0066ff; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        .hide-scroll::-webkit-scrollbar { display: none; }
-        #detail-page, #video-overlay, #search-page { display: none; }
-        #video-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; }
-        
-        #search-suggestion { max-height: 400px; overflow-y: auto; }
+      }
+
+      /* Suggestion Popover */
+      #search-results-popover {
+        position: absolute;
+        top: 110%;
+        left: 0;
+        width: 100%;
+        background: rgba(10, 10, 10, 0.98);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        z-index: 2000;
+        display: none;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .suggest-item {
+        display: flex;
+        gap: 12px;
+        padding: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        align-items: center;
+      }
+      .suggest-item:hover {
+        background: #0066ff;
+      }
+
+      .row-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .nav-btn {
+        position: absolute;
+        z-index: 40;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        opacity: 0;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .row-wrapper:hover .nav-btn {
+        opacity: 1;
+      }
+      .nav-prev {
+        left: -10px;
+      }
+      .nav-next {
+        right: -10px;
+      }
+
+      .row-container {
+        display: flex;
+        gap: 15px;
+        overflow-x: auto;
+        padding: 15px 0;
+        scroll-behavior: smooth;
+      }
+      .hide-scroll::-webkit-scrollbar {
+        display: none;
+      }
+
+      .glass-nav {
+        background: rgba(5, 5, 5, 0.8);
+        backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .mobile-footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background: rgba(10, 10, 10, 0.95);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: none;
+        justify-content: space-around;
+        padding: 15px 0;
+        z-index: 1000;
+      }
+      @media (max-width: 768px) {
+        .mobile-footer {
+          display: flex;
+        }
+        .desktop-nav {
+          display: none;
+        }
+      }
     </style>
-</head>
-<body>
-
-    <div id="splash">
-        <div id="splash-1" class="text-center transition-all duration-1000">
-            <h1 class="font-netflix text-7xl md:text-9xl text-blue-nc blue-glow italic">NgawurCinema</h1>
+  </head>
+  <body>
+    <nav
+      class="fixed top-0 w-full z-[1000] px-6 md:px-12 py-3 flex justify-between items-center glass-nav"
+    >
+      <div class="flex items-center gap-10">
+        <h1
+          onclick="showPage('home')"
+          class="font-netflix text-3xl md:text-4xl text-[#0066ff] cursor-pointer italic"
+        >
+          NgawurCinema
+        </h1>
+        <div
+          class="desktop-nav flex gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-400"
+        >
+          <span
+            onclick="showPage('home')"
+            class="cursor-pointer hover:text-white transition"
+            >Home</span
+          >
+          <span
+            onclick="filterType('movie')"
+            class="cursor-pointer hover:text-white transition"
+            >Movies</span
+          >
+          <span
+            onclick="filterType('tv')"
+            class="cursor-pointer hover:text-white transition"
+            >Series</span
+          >
         </div>
-        <div id="splash-2" class="text-center mt-12 opacity-0 transition-all duration-1000 absolute flex flex-col items-center">
-            <p class="text-[9px] tracking-[0.6em] text-zinc-500 mb-6 font-bold uppercase">POWERED BY TMDB</p>
-            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" class="w-12 opacity-80">
-        </div>
-    </div>
-
-    <div id="welcome-popup">
-        <div class="bg-zinc-900/80 p-10 md:p-14 rounded-3xl border border-blue-nc/20 text-center max-w-lg mx-4 shadow-2xl">
-            <h2 class="font-netflix text-5xl text-blue-nc mb-6 italic">Halo & Selamat Menonton!</h2>
-            <div class="space-y-2 text-zinc-300 text-xs font-bold uppercase tracking-[0.3em] mb-10 leading-loose">
-                <p class="hover:text-white transition">Cik Akbar Aridani Setiawan</p>
-                <p class="hover:text-white transition">Wok Fairus Rasidin</p>
-                <p class="hover:text-white transition">Firdy Ridho Fillah</p>
-                <p class="hover:text-white transition">Faeyza Ardellein Yaradhitya</p>
-                <p class="hover:text-white transition">Malfaluna Rahmah</p>
-            </div>
-            <button onclick="closeWelcome()" class="bg-blue-nc px-14 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] hover:scale-110 transition shadow-lg shadow-blue-nc/20">Gas Nonton Wok</button>
-        </div>
-    </div>
-
-    <nav class="fixed top-0 w-full z-[1000] px-8 py-4 flex justify-between items-center bg-gradient-to-b from-black via-black/80 to-transparent backdrop-blur-md">
-        <div class="flex items-center gap-10">
-            <h1 onclick="location.reload()" class="font-netflix text-4xl text-blue-nc cursor-pointer blue-glow italic">NgawurCinema</h1>
-            <div class="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                <button onclick="location.reload()" class="hover:text-white transition">Home</button>
-                <button onclick="executeSearch('trending')" class="hover:text-white transition">Explore</button>
-            </div>
-        </div>
-        
-        <div class="flex items-center gap-6 w-1/3 justify-end relative">
-            <div class="relative w-full">
-                <input type="text" id="search-input" onkeyup="handleSearchInput(event)" placeholder="Cari film favoritmu..." class="w-full bg-zinc-900/80 border border-white/10 py-2.5 px-10 rounded-full text-xs focus:border-blue-nc outline-none text-white transition-all">
-                <div id="search-suggestion" class="absolute top-full mt-3 w-full bg-zinc-900 border border-white/10 rounded-xl hidden shadow-2xl z-[1100] backdrop-blur-xl"></div>
-            </div>
-        </div>
+      </div>
+      <div class="search-container relative">
+        <input
+          type="text"
+          id="search-input"
+          oninput="handleSearchSuggest(this.value)"
+          onkeypress="handleEnter(event)"
+          placeholder="Search..."
+          class="w-full bg-zinc-900 border border-white/10 py-2 px-5 rounded-full text-[11px] outline-none focus:border-[#0066ff]"
+        />
+        <div id="search-results-popover" class="hide-scroll"></div>
+      </div>
     </nav>
 
-    <div id="home-page" class="opacity-0 transition-opacity duration-1000">
-        <header id="hero-slider" class="h-[85vh] relative flex items-center px-12 overflow-hidden">
-            <div id="hero-bg" class="absolute inset-0 bg-cover bg-center transition-all duration-1000 scale-100"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-[#020202] via-[#020202]/50 to-transparent"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent"></div>
-            <div class="relative z-10 max-w-3xl">
-                <h2 id="hero-title" class="font-netflix text-6xl md:text-8xl mb-6 uppercase italic leading-[0.9] transition-all duration-700">...</h2>
-                <p id="hero-desc" class="text-zinc-300 text-lg line-clamp-3 mb-10 max-w-xl transition-all duration-700 delay-100"></p>
-                <button id="hero-btn" class="bg-blue-nc px-12 py-4 rounded font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition">▶ Tonton Sekarang</button>
-            </div>
-        </header>
-
-        <main class="px-12 -mt-24 relative z-20 pb-20">
-            <h3 class="font-netflix text-2xl mb-8 tracking-widest text-blue-nc italic uppercase">Lagi Rame Hari Ini</h3>
-            <div id="movie-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
-        </main>
-    </div>
-
-    <div id="search-page" class="pt-32 px-12 pb-20">
-        <h3 id="search-title-text" class="font-netflix text-3xl mb-12 text-blue-nc italic uppercase border-l-4 border-blue-nc pl-4">Hasil Pencarian</h3>
-        <div id="search-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
-    </div>
-
-    <div id="detail-page">
-        <section class="min-h-[90vh] relative flex items-center px-6 md:px-16 py-32">
-            <div id="detail-backdrop" class="absolute inset-0 bg-cover bg-center opacity-40"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent"></div>
-            <div class="absolute right-10 md:right-40 top-1/2 -translate-y-1/2 z-50">
-                <button onclick="openPlayer()" class="w-32 h-32 md:w-48 md:h-48 bg-blue-nc rounded-full flex items-center justify-center shadow-[0_0_80px_rgba(0,102,255,0.4)] hover:scale-110 transition group">
-                    <span class="text-6xl ml-4 text-white group-hover:animate-pulse">▶</span>
-                </button>
-            </div>
-            <div class="relative z-10 max-w-4xl">
-                <h1 id="detail-title" class="font-netflix text-6xl md:text-9xl mb-8 uppercase italic leading-[0.85]">...</h1>
-                <div class="flex gap-4 mb-10">
-                    <button onclick="openTrailerPop()" class="bg-white text-black px-10 py-3 rounded font-bold text-[10px] uppercase tracking-widest hover:bg-zinc-200 transition">▷ Trailer</button>
-                </div>
-                <div class="flex flex-wrap items-center gap-6 text-[12px] font-bold mb-10 text-zinc-300 uppercase tracking-widest">
-                    <span id="detail-year" class="bg-zinc-800/80 px-4 py-1.5 rounded-full">...</span>
-                    <span id="detail-runtime" class="text-blue-nc">...</span>
-                    <span class="text-yellow-500">★ <span id="detail-vote">...</span></span>
-                </div>
-                <p id="detail-desc" class="text-zinc-400 text-lg leading-relaxed max-w-2xl"></p>
-                <div id="cast-list" class="flex gap-8 overflow-x-auto mt-12 hide-scroll pb-4"></div>
-            </div>
-        </section>
-
-        <section class="px-12 py-20 bg-[#020202]">
-            <h3 class="font-netflix text-2xl mb-10 tracking-widest text-blue-nc italic uppercase">Film Terkait</h3>
-            <div id="recommend-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
-        </section>
-    </div>
-
-    <div id="video-overlay">
-        <div class="h-20 flex justify-between items-center px-10 bg-black border-b border-white/5">
-            <span id="player-movie-title" class="font-netflix text-3xl text-blue-nc italic tracking-wider">...</span>
-            <button onclick="closePlayer()" class="bg-zinc-900 border border-white/10 px-10 py-2.5 rounded-full text-[10px] font-bold uppercase hover:bg-red-600 transition">Tutup Player</button>
+    <div id="home-page" class="page-content">
+      <header
+        class="h-[80vh] relative flex items-center px-6 md:px-12 overflow-hidden"
+      >
+        <div
+          id="hero-bg"
+          class="absolute inset-0 bg-cover bg-center transition-all duration-1000 scale-105"
+        ></div>
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"
+        ></div>
+        <div class="relative z-10 max-w-3xl">
+          <h2
+            id="hero-title"
+            class="font-netflix text-5xl md:text-8xl mb-4 italic leading-tight uppercase"
+          >
+            ...
+          </h2>
+          <p
+            id="hero-desc"
+            class="text-zinc-300 text-sm md:text-base line-clamp-3 mb-6 font-light max-w-xl"
+          ></p>
+          <div class="flex flex-wrap gap-2 mb-8">
+            <button
+              onclick="executeGenre(28, 'Action')"
+              class="px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold uppercase hover:bg-[#0066ff] transition"
+            >
+              Action
+            </button>
+            <button
+              onclick="executeGenre(27, 'Horror')"
+              class="px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold uppercase hover:bg-[#0066ff] transition"
+            >
+              Horror
+            </button>
+            <button
+              onclick="executeGenre(16, 'Animation')"
+              class="px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold uppercase hover:bg-[#0066ff] transition"
+            >
+              Animation
+            </button>
+          </div>
+          <button
+            id="hero-btn"
+            class="bg-[#0066ff] px-12 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition"
+          >
+            Watch Now
+          </button>
         </div>
-        <div class="flex-1">
-            <iframe id="main-iframe" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>
+      </header>
+
+      <main class="px-6 md:px-12 -mt-10 relative z-20 pb-40">
+        <div class="mb-12">
+          <h3 class="font-netflix text-2xl text-[#0066ff] italic mb-2">
+            Trending
+          </h3>
+          <div class="row-wrapper">
+            <button
+              class="nav-btn nav-prev"
+              onclick="slide('row-trending', -500)"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div id="row-trending" class="row-container hide-scroll"></div>
+            <button
+              class="nav-btn nav-next"
+              onclick="slide('row-trending', 500)"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
+        <div class="mb-12">
+          <h3 class="font-netflix text-2xl text-white italic mb-2">
+            Popular Series
+          </h3>
+          <div class="row-wrapper">
+            <button class="nav-btn nav-prev" onclick="slide('row-tv', -500)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div id="row-tv" class="row-container hide-scroll"></div>
+            <button class="nav-btn nav-next" onclick="slide('row-tv', 500)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mb-12">
+          <h3 class="font-netflix text-2xl text-white italic mb-2">
+            Science Fiction
+          </h3>
+          <div class="row-wrapper">
+            <button class="nav-btn nav-prev" onclick="slide('row-scifi', -500)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div id="row-scifi" class="row-container hide-scroll"></div>
+            <button class="nav-btn nav-next" onclick="slide('row-scifi', 500)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mb-12">
+          <h3 class="font-netflix text-2xl text-white italic mb-2">
+            Comedy Selection
+          </h3>
+          <div class="row-wrapper">
+            <button
+              class="nav-btn nav-prev"
+              onclick="slide('row-comedy', -500)"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div id="row-comedy" class="row-container hide-scroll"></div>
+            <button class="nav-btn nav-next" onclick="slide('row-comedy', 500)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="detail-page" class="page-content min-h-screen pb-32">
+      <section
+        class="relative px-6 md:px-16 pt-32 flex flex-col md:flex-row gap-12"
+      >
+        <div
+          id="detail-backdrop"
+          class="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none"
+        ></div>
+        <div class="relative z-10 w-full md:w-1/4">
+          <img
+            id="detail-poster"
+            class="w-full rounded-2xl shadow-2xl border border-white/5"
+          />
+        </div>
+        <div class="relative z-10 w-full md:w-3/4">
+          <h1
+            id="detail-title"
+            class="font-netflix text-5xl md:text-7xl mb-4 italic uppercase"
+          >
+            ...
+          </h1>
+          <div
+            id="series-stats"
+            class="mb-6 flex gap-4 text-[#0066ff] font-bold text-[10px] uppercase bg-blue-600/10 px-4 py-2 rounded-lg w-fit"
+          >
+            <span id="stat-season">Season: 0</span> •
+            <span id="stat-episode">Episode: 0</span>
+          </div>
+          <p
+            id="detail-desc"
+            class="text-zinc-300 text-base md:text-lg mb-8 leading-relaxed max-w-4xl"
+          ></p>
+          <div
+            id="series-ui"
+            class="hidden mb-10 bg-zinc-900/50 p-6 rounded-2xl border border-white/10"
+          >
+            <div class="flex flex-wrap gap-4 items-end">
+              <input
+                type="number"
+                id="s-input"
+                value="1"
+                min="1"
+                class="bg-black border border-white/20 p-3 w-20 rounded-lg text-white"
+              />
+              <input
+                type="number"
+                id="e-input"
+                value="1"
+                min="1"
+                class="bg-black border border-white/20 p-3 w-20 rounded-lg text-white"
+              />
+              <button
+                onclick="playMedia('tv')"
+                class="bg-[#0066ff] px-10 h-12 rounded-xl font-bold text-xs uppercase"
+              >
+                Play
+              </button>
+            </div>
+          </div>
+          <div id="movie-ui" class="hidden mb-10">
+            <button
+              onclick="playMedia('movie')"
+              class="bg-[#0066ff] px-14 py-4 rounded-xl font-bold text-xs uppercase tracking-widest"
+            >
+              Watch Now
+            </button>
+          </div>
+          <button
+            id="trailer-btn"
+            class="bg-white/5 border border-white/10 px-8 py-3 rounded-lg text-[10px] font-bold uppercase mb-12"
+          >
+            Trailer
+          </button>
+          <div
+            id="cast-row"
+            class="flex gap-6 overflow-x-auto hide-scroll"
+          ></div>
+        </div>
+      </section>
+      <section class="px-6 md:px-12 py-12">
+        <h3 class="font-netflix text-2xl text-[#0066ff] italic mb-8">
+          Recommendations
+        </h3>
+        <div
+          id="recommend-grid"
+          class="grid grid-cols-2 md:grid-cols-6 gap-6"
+        ></div>
+      </section>
+    </div>
+
+    <div id="search-page" class="page-content pt-32 px-6 md:px-12 pb-32">
+      <h3
+        id="search-title-text"
+        class="font-netflix text-4xl mb-12 text-[#0066ff] italic uppercase italic"
+      >
+        Search Results
+      </h3>
+      <div id="search-grid" class="grid grid-cols-2 md:grid-cols-6 gap-6"></div>
+    </div>
+
+    <div
+      id="video-overlay"
+      class="fixed inset-0 bg-black z-[10000] flex flex-col"
+    >
+      <div
+        class="p-4 flex justify-between items-center bg-zinc-950 border-b border-white/5"
+      >
+        <h2 class="text-[10px] font-bold italic ml-4 text-[#0066ff]">Ngawur Cinema</h2>
+        <button
+          onclick="closePlayer()"
+          class="bg-red-600 px-6 py-2 rounded-full text-[10px] font-bold uppercase"
+        >
+          Close
+        </button>
+      </div>
+      <iframe id="main-iframe" class="flex-1" allowfullscreen></iframe>
+    </div>
+    <div
+      id="trailer-overlay"
+      class="fixed inset-0 bg-black z-[10000] flex flex-col"
+    >
+      <div
+        class="p-4 flex justify-between items-center bg-zinc-950 border-b border-white/5"
+      >
+        <h2 class="text-[10px] font-bold italic ml-4">TRAILER</h2>
+        <button
+          onclick="closeTrailer()"
+          class="bg-white/10 px-6 py-2 rounded-full text-[10px] font-bold uppercase"
+        >
+          Close
+        </button>
+      </div>
+      <iframe id="trailer-iframe" class="flex-1" allowfullscreen></iframe>
+    </div>
+
+    <div class="mobile-footer">
+      <div onclick="showPage('home')" class="text-center">
+        <i class="fas fa-home text-lg text-[#0066ff]"></i>
+        <p class="text-[8px] mt-1 font-bold">HOME</p>
+      </div>
+      <div onclick="filterType('movie')" class="text-center">
+        <i class="fas fa-film text-lg"></i>
+        <p class="text-[8px] mt-1 font-bold">MOVIES</p>
+      </div>
+      <div onclick="filterType('tv')" class="text-center">
+        <i class="fas fa-tv text-lg"></i>
+        <p class="text-[8px] mt-1 font-bold">SERIES</p>
+      </div>
+      <div
+        onclick="document.getElementById('search-input').focus()"
+        class="text-center"
+      >
+        <i class="fas fa-search text-lg"></i>
+        <p class="text-[8px] mt-1 font-bold">SEARCH</p>
+      </div>
     </div>
 
     <script>
-        const API_KEY = '4691c1d87e79a0a7af5eb27a98ee2dce';
-        const BASE_URL = 'https://api.themoviedb.org/3';
-        const IMG_URL = 'https://image.tmdb.org/t/p/w500';
-        const ORI_URL = 'https://image.tmdb.org/t/p/original';
+      const API_KEY = "4691c1d87e79a0a7af5eb27a98ee2dce";
+      const OMDB_KEY = "4eea9569";
+      const IMG_URL = "https://image.tmdb.org/t/p/w500"; // FIXED URL
+      const ORI_URL = "https://image.tmdb.org/t/p/original"; // FIXED URL
 
-        let currentMovie = null;
-        let trendingMovies = [];
-        let heroIndex = 0;
+      let trending = [],
+        hIdx = 0,
+        currentItem = null;
 
-        window.onload = () => {
-            const hasSeenSplash = sessionStorage.getItem('seenSplash');
-            if (!hasSeenSplash) {
-                const splash = document.getElementById('splash');
-                splash.style.display = 'flex';
-                setTimeout(() => {
-                    document.getElementById('splash-1').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('splash-2').style.opacity = '1';
-                        setTimeout(() => {
-                            splash.style.opacity = '0';
-                            setTimeout(() => {
-                                splash.style.display = 'none';
-                                showWelcome();
-                                sessionStorage.setItem('seenSplash', 'true');
-                            }, 800);
-                        }, 1200);
-                    }, 400);
-                }, 1000);
-            } else {
-                showWelcome();
-            }
-            getTrending();
+      window.onload = init;
+
+      async function init() {
+        const res = await fetch(
+          `https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}&language=id-ID`,
+        );
+        const d = await res.json();
+        trending = d.results;
+        renderRow(trending, "row-trending");
+        startHero();
+        fetchRows(
+          `https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=id-ID`,
+          "row-tv",
+        );
+        fetchRows(
+          `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=878&language=id-ID`,
+          "row-scifi",
+        );
+        fetchRows(
+          `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=35&language=id-ID`,
+          "row-comedy",
+        );
+      }
+
+      async function handleSearchSuggest(q) {
+        const pop = document.getElementById("search-results-popover");
+        if (q.length < 2) {
+          pop.style.display = "none";
+          return;
+        }
+        const res = await fetch(
+          `https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}&language=id-ID`,
+        );
+        const d = await res.json();
+        pop.innerHTML = "";
+        d.results.slice(0, 8).forEach((m) => {
+          if (!m.poster_path) return;
+          const div = document.createElement("div");
+          div.className = "suggest-item";
+          div.innerHTML = `
+                    <img src="${IMG_URL + m.poster_path}" class="w-12 h-16 object-cover rounded shadow-md">
+                    <div class="flex-1">
+                        <p class="text-xs font-bold uppercase italic line-clamp-1">${m.title || m.name}</p>
+                        <p class="text-[9px] text-[#0066ff] font-bold">${(m.release_date || m.first_air_date || "").split("-")[0]}</p>
+                        <p class="text-[8px] text-zinc-500 uppercase">${m.media_type || "movie"}</p>
+                    </div>
+                `;
+          div.onclick = () => {
+            openDetail(m.id, m.media_type || (m.title ? "movie" : "tv"));
+            pop.style.display = "none";
+          };
+          pop.appendChild(div);
+        });
+        pop.style.display = "block";
+      }
+
+      async function openDetail(id, type) {
+        const res = await fetch(
+          `https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}&append_to_response=recommendations,credits,videos,external_ids&language=id-ID`,
+        );
+        currentItem = await res.json();
+        currentItem.media_type = type;
+
+        if (!currentItem.overview || currentItem.overview.length < 30) {
+          const imdb = currentItem.external_ids?.imdb_id;
+          if (imdb) {
+            const oRes = await fetch(
+              `https://www.omdbapi.com/?i=${imdb}&apikey=${OMDB_KEY}`,
+            );
+            const oData = await oRes.json();
+            if (oData.Plot && oData.Plot !== "N/A")
+              currentItem.overview = oData.Plot;
+          }
+        }
+
+        document.getElementById("detail-backdrop").style.backgroundImage =
+          `url('${ORI_URL + (currentItem.backdrop_path || currentItem.poster_path)}')`;
+        document.getElementById("detail-poster").src =
+          IMG_URL + currentItem.poster_path;
+        document.getElementById("detail-title").innerText =
+          currentItem.title || currentItem.name;
+        document.getElementById("detail-desc").innerText =
+          currentItem.overview || "No data available.";
+
+        if (type === "tv") {
+          document.getElementById("series-ui").classList.remove("hidden");
+          document.getElementById("movie-ui").classList.add("hidden");
+          document.getElementById("series-stats").classList.remove("hidden");
+          document.getElementById("stat-season").innerText =
+            `Seasons: ${currentItem.number_of_seasons}`;
+          document.getElementById("stat-episode").innerText =
+            `Episodes: ${currentItem.number_of_episodes}`;
+        } else {
+          document.getElementById("movie-ui").classList.remove("hidden");
+          document.getElementById("series-ui").classList.add("hidden");
+          document.getElementById("series-stats").classList.add("hidden");
+        }
+
+        const tr = currentItem.videos.results.find((v) => v.type === "Trailer");
+        document.getElementById("trailer-btn").onclick = () => {
+          if (tr) {
+            document.getElementById("trailer-iframe").src =
+              `https://www.youtube.com/embed/${tr.key}?autoplay=1`;
+            document.getElementById("trailer-overlay").style.display = "flex";
+          }
         };
 
-        function showWelcome() {
-            const hasSeenWelcome = sessionStorage.getItem('seenWelcome');
-            if (!hasSeenWelcome) {
-                document.getElementById('welcome-popup').style.display = 'flex';
-            } else {
-                document.getElementById('home-page').style.opacity = '1';
-            }
-        }
-
-        function closeWelcome() {
-            document.getElementById('welcome-popup').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('welcome-popup').style.display = 'none';
-                document.getElementById('home-page').style.opacity = '1';
-                sessionStorage.setItem('seenWelcome', 'true');
-            }, 500);
-        }
-
-        // --- SEARCH LOGIC ---
-        async function handleSearchInput(e) {
-            const q = e.target.value;
-            const box = document.getElementById('search-suggestion');
-            
-            if (q.length < 2) {
-                box.classList.add('hidden');
-                return;
-            }
-
-            if (e.key === "Enter") {
-                box.classList.add('hidden');
-                executeSearch(q);
-                return;
-            }
-
-            const res = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${q}&language=id-ID`);
-            const data = await res.json();
-            
-            box.innerHTML = '';
-            box.classList.remove('hidden');
-            
-            data.results.slice(0, 6).forEach(m => {
-                const div = document.createElement('div');
-                div.className = "p-4 hover:bg-blue-nc/20 cursor-pointer flex items-center gap-4 border-b border-white/5 last:border-0";
-                div.innerHTML = `
-                    <img src="${m.poster_path ? IMG_URL + m.poster_path : 'https://via.placeholder.com/50'}" class="w-10 h-14 object-cover rounded shadow">
-                    <div>
-                        <p class="text-[12px] font-bold uppercase italic leading-tight">${m.title}</p>
-                        <p class="text-[9px] text-zinc-500 mt-1">${m.release_date ? m.release_date.split('-')[0] : 'N/A'}</p>
-                    </div>
-                `;
-                div.onclick = () => {
-                    box.classList.add('hidden');
-                    openMovie(m.id);
-                };
-                box.appendChild(div);
-            });
-        }
-
-        async function executeSearch(q) {
-            let url = q === 'trending' 
-                ? `${BASE_URL}/trending/movie/day?api_key=${API_KEY}&language=id-ID`
-                : `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${q}&language=id-ID`;
-            
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            renderMovies(data.results, 'search-grid');
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('detail-page').style.display = 'none';
-            document.getElementById('search-page').style.display = 'block';
-            document.getElementById('search-title-text').innerText = `Hasil untuk: ${q}`;
-            window.scrollTo(0, 0);
-        }
-
-        // --- CONTENT LOGIC ---
-        async function getTrending() {
-            const res = await fetch(`${BASE_URL}/trending/movie/day?api_key=${API_KEY}&language=id-ID`);
-            const data = await res.json();
-            trendingMovies = data.results;
-            renderMovies(trendingMovies, 'movie-grid');
-            startHeroSlider();
-        }
-
-        function startHeroSlider() {
-            updateHero();
-            setInterval(() => {
-                heroIndex = (heroIndex + 1) % 5;
-                updateHero();
-            }, 7000);
-        }
-
-        function updateHero() {
-            const m = trendingMovies[heroIndex];
-            if(!m) return;
-            const title = document.getElementById('hero-title');
-            const desc = document.getElementById('hero-desc');
-            const bg = document.getElementById('hero-bg');
-            const btn = document.getElementById('hero-btn');
-
-            title.style.opacity = '0'; 
-            desc.style.opacity = '0';
-            
-            setTimeout(() => {
-                bg.style.backgroundImage = `url('${ORI_URL + m.backdrop_path}')`;
-                title.innerText = m.title;
-                desc.innerText = m.overview;
-                btn.onclick = () => openMovie(m.id);
-                
-                title.style.opacity = '1';
-                desc.style.opacity = '1';
-            }, 700);
-        }
-
-        async function openMovie(id) {
-            const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=id-ID&append_to_response=credits,recommendations,videos`);
-            currentMovie = await res.json();
-            
-            document.getElementById('detail-backdrop').style.backgroundImage = `url('${ORI_URL + currentMovie.backdrop_path}')`;
-            document.getElementById('detail-title').innerText = currentMovie.title;
-            document.getElementById('detail-year').innerText = currentMovie.release_date ? currentMovie.release_date.split('-')[0] : '-';
-            document.getElementById('detail-runtime').innerText = currentMovie.runtime + " MENIT";
-            document.getElementById('detail-vote').innerText = currentMovie.vote_average.toFixed(1);
-            document.getElementById('detail-desc').innerText = currentMovie.overview || "Tidak ada deskripsi.";
-            
-            // Rekomendasi (Terkait)
-            renderMovies(currentMovie.recommendations.results.slice(0, 12), 'recommend-grid');
-
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('search-page').style.display = 'none';
-            document.getElementById('detail-page').style.display = 'block';
-            window.scrollTo(0, 0);
-        }
-
-        function renderMovies(movies, targetId) {
-            const target = document.getElementById(targetId);
-            target.innerHTML = '';
-            movies.forEach(m => {
-                if(!m.poster_path) return;
-                const card = document.createElement('div');
-                card.className = "movie-card";
-                card.innerHTML = `
-                    <img src="${IMG_URL + m.poster_path}" class="w-full aspect-[2/3] object-cover">
-                    <div class="p-4 bg-zinc-900/40">
-                        <h4 class="text-[10px] font-bold uppercase truncate italic leading-tight">${m.title}</h4>
-                        <p class="text-[8px] text-blue-nc font-bold mt-1 tracking-widest">${m.release_date ? m.release_date.split('-')[0] : ''}</p>
-                    </div>
-                `;
-                card.onclick = () => openMovie(m.id);
-                target.appendChild(card);
-            });
-        }
-
-        function openPlayer() {
-            document.getElementById('player-movie-title').innerText = currentMovie.title;
-            document.getElementById('video-overlay').style.display = 'flex';
-            document.getElementById('main-iframe').src = `https://111movies.net/movie/${currentMovie.id}`;
-        }
-
-        function closePlayer() { 
-            document.getElementById('video-overlay').style.display = 'none'; 
-            document.getElementById('main-iframe').src = ''; 
-        }
-
-        // Tambahan untuk menutup suggestion saat klik di mana saja
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#search-input')) {
-                document.getElementById('search-suggestion').classList.add('hidden');
-            }
+        const cr = document.getElementById("cast-row");
+        cr.innerHTML = "";
+        currentItem.credits.cast.slice(0, 10).forEach((c) => {
+          const d = document.createElement("div");
+          d.className = "text-center min-w-[80px]";
+          d.innerHTML = `<img src="${c.profile_path ? IMG_URL + c.profile_path : "https://via.placeholder.com/80"}" class="w-16 h-16 rounded-full object-cover mx-auto mb-2 border-2 border-[#0066ff] shadow-lg"><p class="text-[8px] font-bold text-zinc-400">${c.name}</p>`;
+          cr.appendChild(d);
         });
+
+        renderGrid(
+          currentItem.recommendations.results.slice(0, 12),
+          "recommend-grid",
+        );
+        showPage("detail");
+      }
+
+      function handleEnter(e) {
+        if (e.key === "Enter") {
+          document.getElementById("search-results-popover").style.display =
+            "none";
+          executeSearch(e.target.value);
+          e.target.blur();
+        }
+      }
+
+      async function executeSearch(q) {
+        const res = await fetch(
+          `https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}&language=id-ID`,
+        );
+        const d = await res.json();
+        renderGrid(d.results, "search-grid");
+        document.getElementById("search-title-text").innerText =
+          `Results for: ${q.toUpperCase()}`;
+        showPage("search");
+      }
+
+      function renderRow(data, tid) {
+        const t = document.getElementById(tid);
+        t.innerHTML = "";
+        data.forEach((m) => {
+          if (!m.poster_path) return;
+          const type = m.media_type || (m.title ? "movie" : "tv");
+          const relDate = new Date(m.release_date || m.first_air_date);
+          const isSoon = relDate > new Date();
+          const c = document.createElement("div");
+          c.className = "movie-card";
+          c.innerHTML = `<div class="card-type">${type === "tv" ? "SERIES" : "MOVIE"}</div><div class="card-status ${isSoon ? "status-soon" : ""}">${isSoon ? "SOON" : "HD"}</div><img src="${IMG_URL + m.poster_path}" class="w-full h-full object-cover">`;
+          c.onclick = () => openDetail(m.id, type);
+          t.appendChild(c);
+        });
+      }
+
+      function renderGrid(data, tid) {
+        const t = document.getElementById(tid);
+        t.innerHTML = "";
+        data.forEach((m) => {
+          if (!m.poster_path) return;
+          const c = document.createElement("div");
+          c.className = "movie-card min-w-0";
+          c.innerHTML = `<div class="card-type">${m.title ? "MOVIE" : "SERIES"}</div><img src="${IMG_URL + m.poster_path}" class="w-full h-full object-cover">`;
+          c.onclick = () => openDetail(m.id, m.title ? "movie" : "tv");
+          t.appendChild(c);
+        });
+      }
+
+      function showPage(id) {
+        document
+          .querySelectorAll(".page-content")
+          .forEach((p) => (p.style.display = "none"));
+        document.getElementById(id + "-page").style.display = "block";
+        window.scrollTo(0, 0);
+      }
+
+      function slide(id, d) {
+        document.getElementById(id).scrollBy({ left: d, behavior: "smooth" });
+      }
+      function closePlayer() {
+        document.getElementById("video-overlay").style.display = "none";
+        document.getElementById("main-iframe").src = "";
+      }
+      function closeTrailer() {
+        document.getElementById("trailer-overlay").style.display = "none";
+        document.getElementById("trailer-iframe").src = "";
+      }
+
+      function startHero() {
+        const update = () => {
+          if (trending.length === 0) return;
+          const m = trending[hIdx];
+          document.getElementById("hero-bg").style.backgroundImage =
+            `url('${ORI_URL + (m.backdrop_path || m.poster_path)}')`;
+          document.getElementById("hero-title").innerText = m.title || m.name;
+          document.getElementById("hero-desc").innerText =
+            m.overview || "Streaming High Quality on NgawurCinema.";
+          document.getElementById("hero-btn").onclick = () =>
+            openDetail(m.id, m.media_type || (m.title ? "movie" : "tv"));
+          hIdx = (hIdx + 1) % 5;
+        };
+        update();
+        setInterval(update, 9000);
+      }
+
+      async function fetchRows(url, tid) {
+        const res = await fetch(url);
+        const d = await res.json();
+        renderRow(d.results, tid);
+      }
+      async function filterType(type) {
+        fetchRows(
+          `https://api.themoviedb.org/3/trending/${type}/day?api_key=${API_KEY}`,
+          "search-grid",
+        );
+        showPage("search");
+      }
+      async function executeGenre(id, name) {
+        const res = await fetch(
+          `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${id}`,
+        );
+        const d = await res.json();
+        renderGrid(d.results, "search-grid");
+        document.getElementById("search-title-text").innerText =
+          `GENRE: ${name.toUpperCase()}`;
+        showPage("search");
+      }
+      function playMedia(type) {
+        const sid = document.getElementById("s-input").value;
+        const eid = document.getElementById("e-input").value;
+        document.getElementById("main-iframe").src =
+          type === "movie"
+            ? `https://111movies.net/movie/${currentItem.id}`
+            : `https://111movies.net/tv/${currentItem.id}/${sid}/${eid}`;
+        document.getElementById("video-overlay").style.display = "flex";
+      }
     </script>
-</body>
+  </body>
 </html>
