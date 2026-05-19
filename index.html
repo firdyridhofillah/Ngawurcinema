@@ -364,18 +364,28 @@
       <div id="search-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-6"></div>
     </div>
 
-    <!-- PLAYER OVERLAY -->
+    <!-- PLAYER OVERLAY DENGAN SERVER SWITCHER -->
     <div id="player-overlay">
-      <div class="p-4 flex justify-between items-center bg-zinc-950 border-b border-white/10 shadow-xl z-10">
-        <div class="flex items-center gap-3">
-            <span class="bg-blue-600 text-white text-[9px] font-black px-2 py-1 rounded uppercase">Server VidSrc</span>
-            <span class="text-[11px] font-bold italic text-zinc-300 uppercase tracking-widest">NG-PLAYER v52</span>
-            <span class="text-[9px] font-bold text-yellow-500 hidden md:block">*Jangan lupa klik tombol CC pada player untuk Subtitle</span>
+      <div class="p-3 flex flex-col md:flex-row justify-between items-center bg-zinc-950 border-b border-white/10 shadow-xl z-10 gap-3">
+        
+        <!-- Multi Server Buttons -->
+        <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 hide-scroll">
+            <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mr-1 whitespace-nowrap">Pilih Server:</span>
+            <button onclick="changeServer('111')" id="btn-srv-111" class="server-btn bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded uppercase whitespace-nowrap transition-colors">Utama (Sub Indo)</button>
+            <button onclick="changeServer('vidsrc')" id="btn-srv-vidsrc" class="server-btn bg-white/10 hover:bg-white/20 text-zinc-300 text-[10px] font-black px-4 py-1.5 rounded uppercase whitespace-nowrap transition-colors">Server 2</button>
+            <button onclick="changeServer('auto')" id="btn-srv-auto" class="server-btn bg-white/10 hover:bg-white/20 text-zinc-300 text-[10px] font-black px-4 py-1.5 rounded uppercase whitespace-nowrap transition-colors">Server 3</button>
         </div>
-        <button onclick="closePlayer()" class="bg-white/10 hover:bg-red-600 hover:text-white text-zinc-300 border border-white/10 px-6 py-2 rounded-full text-[10px] font-black uppercase transition-all flex items-center gap-2">
+
+        <button onclick="closePlayer()" class="bg-red-600 hover:bg-red-500 text-white px-6 py-1.5 rounded-full text-[10px] font-black uppercase transition-all flex items-center gap-2 whitespace-nowrap ml-auto md:ml-0">
           <i class="fas fa-times"></i> Tutup
         </button>
       </div>
+      
+      <!-- Pemberitahuan Error / Loading state jika diperlukan -->
+      <div id="server-notice" class="bg-blue-900/50 text-blue-200 text-[10px] text-center py-1 font-bold tracking-widest hidden">
+        JIKA VIDEO ERROR ATAU HILANG, SILAKAN GANTI SERVER DI ATAS.
+      </div>
+
       <iframe id="main-iframe" class="flex-1 w-full h-full bg-black border-none" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="autoplay; fullscreen"></iframe>
     </div>
 
@@ -401,6 +411,7 @@
       const ORI = "https://image.tmdb.org/t/p/original";
 
       let trending = [], hIdx = 0, currentItem = null;
+      let activeServer = '111'; // Default ke 111Movies karena user butuh Sub Indo
 
       window.onload = () => init();
 
@@ -520,28 +531,52 @@
         showPage("detail");
       }
 
-      // --- LOGIKA VIDEO PLAYER TERBARU ---
-      function playMedia(type) {
+      // --- LOGIKA MULTI SERVER ---
+      function playMedia(type, serverOverride = null) {
+        if(serverOverride) activeServer = serverOverride;
+        
         const s = document.getElementById("s-in") ? document.getElementById("s-in").value : 1;
         const e = document.getElementById("e-in") ? document.getElementById("e-in").value : 1;
         const tmdb_id = currentItem.id;
+        
+        // Atur UI Tombol Server
+        document.querySelectorAll('.server-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white');
+            btn.classList.add('bg-white/10', 'text-zinc-300');
+        });
+        const activeBtn = document.getElementById(`btn-srv-${activeServer}`);
+        activeBtn.classList.remove('bg-white/10', 'text-zinc-300');
+        activeBtn.classList.add('bg-blue-600', 'text-white');
 
-        // SERVER 1: VidSrc (Paling stabil saat ini - Default)
-        const urlVidSrc = type === "movie"
-            ? `https://vidsrc.me/embed/movie?tmdb=${tmdb_id}`
-            : `https://vidsrc.me/embed/tv?tmdb=${tmdb_id}&season=${s}&episode=${e}`;
+        let embedUrl = "";
+        const noticeEl = document.getElementById("server-notice");
 
-        // Jika VidSrc error suatu saat, beri comment pada urlVidSrc di atas, lalu hapus comment di salah satu server bawah ini:
+        if (activeServer === '111') {
+            embedUrl = type === "movie" 
+                ? `https://111movies.net/movie/${tmdb_id}?sub=1&sub_id=id` 
+                : `https://111movies.net/tv/${tmdb_id}/${s}/${e}?sub=1&sub_id=id`;
+            noticeEl.style.display = 'block'; // Tampilkan peringatan jika error pindah server
+        } 
+        else if (activeServer === 'vidsrc') {
+            embedUrl = type === "movie"
+                ? `https://vidsrc.me/embed/movie?tmdb=${tmdb_id}`
+                : `https://vidsrc.me/embed/tv?tmdb=${tmdb_id}&season=${s}&episode=${e}`;
+            noticeEl.style.display = 'none';
+        } 
+        else if (activeServer === 'auto') {
+            embedUrl = type === "movie"
+                ? `https://player.autoembed.cc/embed/movie/${tmdb_id}`
+                : `https://player.autoembed.cc/embed/tv/${tmdb_id}/${s}/${e}`;
+            noticeEl.style.display = 'none';
+        }
 
-        // SERVER 2: AutoEmbed 
-        // const urlAutoEmbed = type === "movie" ? `https://player.autoembed.cc/embed/movie/${tmdb_id}` : `https://player.autoembed.cc/embed/tv/${tmdb_id}/${s}/${e}`;
-
-        // SERVER 3: SuperEmbed
-        // const urlSuperEmbed = type === "movie" ? `https://multiembed.mov/?video_id=${tmdb_id}&tmdb=1` : `https://multiembed.mov/?video_id=${tmdb_id}&tmdb=1&s=${s}&e=${e}`;
-
-        // Ganti 'urlVidSrc' dengan variabel server lain di atas jika ingin menukar server
-        document.getElementById("main-iframe").src = urlVidSrc; 
+        document.getElementById("main-iframe").src = embedUrl; 
         document.getElementById("player-overlay").style.display = "flex";
+      }
+
+      function changeServer(serverName) {
+        const type = currentItem.media_type || (currentItem.title ? "movie" : "tv");
+        playMedia(type, serverName);
       }
       
       function closePlayer() {
