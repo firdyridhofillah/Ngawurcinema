@@ -368,14 +368,14 @@
     <div id="player-overlay">
       <div class="p-4 flex justify-between items-center bg-zinc-950 border-b border-white/10 shadow-xl z-10">
         <div class="flex items-center gap-3">
-            <span class="bg-blue-600 text-white text-[9px] font-black px-2 py-1 rounded uppercase">Server 1</span>
+            <span class="bg-blue-600 text-white text-[9px] font-black px-2 py-1 rounded uppercase">Server VidSrc</span>
             <span class="text-[11px] font-bold italic text-zinc-300 uppercase tracking-widest">NG-PLAYER v52</span>
+            <span class="text-[9px] font-bold text-yellow-500 hidden md:block">*Jangan lupa klik tombol CC pada player untuk Subtitle</span>
         </div>
         <button onclick="closePlayer()" class="bg-white/10 hover:bg-red-600 hover:text-white text-zinc-300 border border-white/10 px-6 py-2 rounded-full text-[10px] font-black uppercase transition-all flex items-center gap-2">
           <i class="fas fa-times"></i> Tutup
         </button>
       </div>
-      <!-- Added allow="autoplay; fullscreen" properly to ensure embed logic runs perfectly -->
       <iframe id="main-iframe" class="flex-1 w-full h-full bg-black border-none" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="autoplay; fullscreen"></iframe>
     </div>
 
@@ -405,10 +405,9 @@
       window.onload = () => init();
 
       async function init() {
-        // Fetch trending dengan &language=id-ID agar deskripsi dalam bahasa Indonesia
         const res = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}&language=id-ID`);
         const d = await res.json();
-        trending = d.results.filter(m => m.backdrop_path && m.overview); // pastikan ada gambar dan deskripsi
+        trending = d.results.filter(m => m.backdrop_path && m.overview);
 
         const rows = [
           { title: "Lagi Trending", id: "row-pop", url: `https://api.themoviedb.org/3/trending/all/week?api_key=${API_KEY}&language=id-ID` },
@@ -444,16 +443,12 @@
       }
 
       async function openDetail(id, type) {
-        // Fetch detail lengkap beserta lokalisasi bahasa indonesia
         const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}&append_to_response=recommendations,credits&language=id-ID`);
         currentItem = await res.json();
         currentItem.media_type = type;
 
-        // Atur Gambar
         document.getElementById("detail-backdrop").style.backgroundImage = `url('${currentItem.backdrop_path ? ORI + currentItem.backdrop_path : ''}')`;
         document.getElementById("detail-poster").src = currentItem.poster_path ? IMG + currentItem.poster_path : 'https://via.placeholder.com/500x750?text=No+Image';
-        
-        // Atur Judul & Tagline
         document.getElementById("det-title").innerText = currentItem.title || currentItem.name;
         
         const taglineEl = document.getElementById("det-tagline");
@@ -464,14 +459,10 @@
             taglineEl.style.display = 'none';
         }
 
-        // Atur Deskripsi
         document.getElementById("det-desc").innerText = currentItem.overview || "Belum ada deskripsi bahasa Indonesia untuk film ini.";
-        
-        // Rating & Tahun
         document.getElementById("det-rate").innerHTML = `<i class="fas fa-star mr-1"></i> ${currentItem.vote_average ? currentItem.vote_average.toFixed(1) : 'N/A'}`;
         document.getElementById("det-year").innerText = (currentItem.release_date || currentItem.first_air_date || "N/A").split("-")[0];
 
-        // Durasi / Status (Elemen Tambahan)
         const runtimeEl = document.getElementById("det-runtime");
         if(currentItem.runtime) {
             runtimeEl.innerText = `${currentItem.runtime} Menit`;
@@ -488,7 +479,6 @@
             statusEl.classList.add('hidden');
         }
 
-        // Genres
         const genresContainer = document.getElementById("det-genres");
         genresContainer.innerHTML = '';
         if(currentItem.genres) {
@@ -497,7 +487,6 @@
             });
         }
 
-        // Tampilan Type (TV vs Movie)
         if (type === "tv") {
           document.getElementById("series-ui").classList.remove("hidden");
           document.getElementById("series-stats").classList.remove("hidden");
@@ -509,7 +498,6 @@
           document.getElementById("series-stats").classList.add("hidden");
         }
 
-        // Cast
         const cr = document.getElementById("cast-row");
         cr.innerHTML = "";
         if(currentItem.credits && currentItem.credits.cast) {
@@ -525,7 +513,6 @@
             });
         }
 
-        // Recommendations
         if(currentItem.recommendations && currentItem.recommendations.results) {
             renderGrid(currentItem.recommendations.results.slice(0, 12), "rec-grid");
         }
@@ -533,22 +520,33 @@
         showPage("detail");
       }
 
-      // --- LOGIKA VIDEO PLAYER TIDAK DIUBAH SESUAI PERMINTAAN ---
+      // --- LOGIKA VIDEO PLAYER TERBARU ---
       function playMedia(type) {
-        const s = document.getElementById("s-in").value;
-        const e = document.getElementById("e-in").value;
-        const url = type === "movie"
-            ? `https://111movies.net/movie/${currentItem.id}`
-            : `https://111movies.net/tv/${currentItem.id}/${s}/${e}`;
+        const s = document.getElementById("s-in") ? document.getElementById("s-in").value : 1;
+        const e = document.getElementById("e-in") ? document.getElementById("e-in").value : 1;
+        const tmdb_id = currentItem.id;
 
-        // Parameter sub_id=id dan sub=1 memastikan subtitle Indonesia terpanggil, logic ini aman.
-        document.getElementById("main-iframe").src = url + "?sub=1&sub_id=id";
+        // SERVER 1: VidSrc (Paling stabil saat ini - Default)
+        const urlVidSrc = type === "movie"
+            ? `https://vidsrc.me/embed/movie?tmdb=${tmdb_id}`
+            : `https://vidsrc.me/embed/tv?tmdb=${tmdb_id}&season=${s}&episode=${e}`;
+
+        // Jika VidSrc error suatu saat, beri comment pada urlVidSrc di atas, lalu hapus comment di salah satu server bawah ini:
+
+        // SERVER 2: AutoEmbed 
+        // const urlAutoEmbed = type === "movie" ? `https://player.autoembed.cc/embed/movie/${tmdb_id}` : `https://player.autoembed.cc/embed/tv/${tmdb_id}/${s}/${e}`;
+
+        // SERVER 3: SuperEmbed
+        // const urlSuperEmbed = type === "movie" ? `https://multiembed.mov/?video_id=${tmdb_id}&tmdb=1` : `https://multiembed.mov/?video_id=${tmdb_id}&tmdb=1&s=${s}&e=${e}`;
+
+        // Ganti 'urlVidSrc' dengan variabel server lain di atas jika ingin menukar server
+        document.getElementById("main-iframe").src = urlVidSrc; 
         document.getElementById("player-overlay").style.display = "flex";
       }
       
       function closePlayer() {
         document.getElementById("player-overlay").style.display = "none";
-        document.getElementById("main-iframe").src = ""; // Membersihkan iframe agar video berhenti otomatis
+        document.getElementById("main-iframe").src = ""; 
       }
 
       function startHero() {
@@ -624,7 +622,7 @@
         data.forEach((m) => {
           if (!m.poster_path) return;
           const c = document.createElement("div");
-          c.className = "movie-card min-w-0 w-full"; // menyesuaikan full width pada grid
+          c.className = "movie-card min-w-0 w-full"; 
           c.innerHTML = `
             <div class="badge bg-zinc-900 border border-white/20"><i class="fas fa-star text-yellow-500 mr-1"></i>${m.vote_average ? m.vote_average.toFixed(1) : '-'}</div>
             <img loading="lazy" src="${IMG + m.poster_path}" class="w-full h-full object-cover">
@@ -641,7 +639,6 @@
         document.getElementById(id + "-page").style.display = "block";
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        // Update Desktop Nav
         document.querySelectorAll(".nav-link").forEach((link) => {
           link.classList.remove("active");
           if (link.innerText.toLowerCase() === id) link.classList.add("active");
@@ -709,7 +706,6 @@
         pop.style.display = "block";
       }
       
-      // Sembunyikan popover search saat klik di luar area
       document.addEventListener('click', (e) => {
           if(!e.target.closest('.relative')) {
               document.getElementById("search-popover").style.display = "none";
