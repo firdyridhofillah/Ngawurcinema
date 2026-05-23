@@ -249,7 +249,6 @@
       </div>
     </nav>
 
-    <!-- HOME PAGE -->
     <div id="home-page" class="page-content">
       <header class="h-[85vh] lg:h-[95vh] relative flex items-center px-6 md:px-12 overflow-hidden">
         <div
@@ -292,7 +291,6 @@
       </main>
     </div>
 
-    <!-- DETAIL PAGE -->
     <div id="detail-page" class="page-content min-h-screen pt-28 pb-40 px-6 md:px-12">
       <div id="detail-backdrop" class="fixed inset-0 bg-cover bg-center opacity-10 pointer-events-none blur-xl"></div>
       
@@ -308,7 +306,6 @@
         </div>
         
         <div class="flex-1">
-          <!-- Metadata lengkap -->
           <div class="flex flex-wrap items-center gap-3 mb-4">
             <span id="det-rate" class="bg-yellow-500 text-black text-[11px] font-black px-3 py-1 rounded shadow-lg shadow-yellow-500/20"></span>
             <span id="det-year" class="text-zinc-300 font-bold text-[12px] bg-white/10 px-3 py-1 rounded"></span>
@@ -356,7 +353,6 @@
       </section>
     </div>
 
-    <!-- SEARCH & FILTER PAGE -->
     <div id="search-page" class="page-content pt-32 px-6 lg:px-12 pb-32 min-h-screen">
       <h3 id="search-title" class="font-netflix text-4xl lg:text-5xl mb-10 text-[#0066ff] italic uppercase drop-shadow-md">
         HASIL
@@ -364,32 +360,26 @@
       <div id="search-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-6"></div>
     </div>
 
-    <!-- PLAYER OVERLAY DENGAN SERVER SWITCHER -->
     <div id="player-overlay">
       <div class="p-3 flex flex-col md:flex-row justify-between items-center bg-zinc-950 border-b border-white/10 shadow-xl z-10 gap-3">
-        
-        <!-- Multi Server Buttons -->
         <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 hide-scroll">
-            <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mr-1 whitespace-nowrap">Pilih Server:</span>
-            <button onclick="changeServer('111')" id="btn-srv-111" class="server-btn bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded uppercase whitespace-nowrap transition-colors">Utama (Sub Indo)</button>
-            <button onclick="changeServer('vidsrc')" id="btn-srv-vidsrc" class="server-btn bg-white/10 hover:bg-white/20 text-zinc-300 text-[10px] font-black px-4 py-1.5 rounded uppercase whitespace-nowrap transition-colors">Server 2</button>
-            <button onclick="changeServer('auto')" id="btn-srv-auto" class="server-btn bg-white/10 hover:bg-white/20 text-zinc-300 text-[10px] font-black px-4 py-1.5 rounded uppercase whitespace-nowrap transition-colors">Server 3</button>
+            <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mr-1 whitespace-nowrap">Source:</span>
+            <span class="server-btn bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded uppercase whitespace-nowrap">111 Movies (Sub Indo)</span>
         </div>
-
         <button onclick="closePlayer()" class="bg-red-600 hover:bg-red-500 text-white px-6 py-1.5 rounded-full text-[10px] font-black uppercase transition-all flex items-center gap-2 whitespace-nowrap ml-auto md:ml-0">
           <i class="fas fa-times"></i> Tutup
         </button>
       </div>
-      
-      <!-- Pemberitahuan Error / Loading state jika diperlukan -->
-      <div id="server-notice" class="bg-blue-900/50 text-blue-200 text-[10px] text-center py-1 font-bold tracking-widest hidden">
-        JIKA VIDEO ERROR ATAU HILANG, SILAKAN GANTI SERVER DI ATAS.
-      </div>
 
-      <iframe id="main-iframe" class="flex-1 w-full h-full bg-black border-none" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="autoplay; fullscreen"></iframe>
+      <iframe id="main-iframe" class="flex-1 w-full h-full bg-black border-none" 
+        allowfullscreen="true" 
+        webkitallowfullscreen="true" 
+        mozallowfullscreen="true" 
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+        referrerpolicy="origin">
+      </iframe>
     </div>
 
-    <!-- MOBILE FOOTER NAV -->
     <div class="mobile-footer">
       <div class="flex flex-col items-center gap-1 text-blue-500 nav-mobile" onclick="showPage('home'); setActiveMobile(this)">
         <i class="fas fa-home text-xl"></i>
@@ -411,7 +401,6 @@
       const ORI = "https://image.tmdb.org/t/p/original";
 
       let trending = [], hIdx = 0, currentItem = null;
-      let activeServer = '111'; // Default ke 111Movies karena user butuh Sub Indo
 
       window.onload = () => init();
 
@@ -531,52 +520,18 @@
         showPage("detail");
       }
 
-      // --- LOGIKA MULTI SERVER ---
-      function playMedia(type, serverOverride = null) {
-        if(serverOverride) activeServer = serverOverride;
-        
+      // --- LOGIKA URL 111 MOVIES ---
+      function playMedia(type) {
         const s = document.getElementById("s-in") ? document.getElementById("s-in").value : 1;
         const e = document.getElementById("e-in") ? document.getElementById("e-in").value : 1;
         const tmdb_id = currentItem.id;
-        
-        // Atur UI Tombol Server
-        document.querySelectorAll('.server-btn').forEach(btn => {
-            btn.classList.remove('bg-blue-600', 'text-white');
-            btn.classList.add('bg-white/10', 'text-zinc-300');
-        });
-        const activeBtn = document.getElementById(`btn-srv-${activeServer}`);
-        activeBtn.classList.remove('bg-white/10', 'text-zinc-300');
-        activeBtn.classList.add('bg-blue-600', 'text-white');
 
-        let embedUrl = "";
-        const noticeEl = document.getElementById("server-notice");
-
-        if (activeServer === '111') {
-            embedUrl = type === "movie" 
-                ? `https://111movies.net/movie/${tmdb_id}?sub=1&sub_id=id` 
-                : `https://111movies.net/tv/${tmdb_id}/${s}/${e}?sub=1&sub_id=id`;
-            noticeEl.style.display = 'block'; // Tampilkan peringatan jika error pindah server
-        } 
-        else if (activeServer === 'vidsrc') {
-            embedUrl = type === "movie"
-                ? `https://vidsrc.me/embed/movie?tmdb=${tmdb_id}`
-                : `https://vidsrc.me/embed/tv?tmdb=${tmdb_id}&season=${s}&episode=${e}`;
-            noticeEl.style.display = 'none';
-        } 
-        else if (activeServer === 'auto') {
-            embedUrl = type === "movie"
-                ? `https://player.autoembed.cc/embed/movie/${tmdb_id}`
-                : `https://player.autoembed.cc/embed/tv/${tmdb_id}/${s}/${e}`;
-            noticeEl.style.display = 'none';
-        }
+        let embedUrl = type === "movie" 
+            ? `https://111movies.com/movie/${tmdb_id}` 
+            : `https://111movies.com/tv/${tmdb_id}/${s}/${e}`;
 
         document.getElementById("main-iframe").src = embedUrl; 
         document.getElementById("player-overlay").style.display = "flex";
-      }
-
-      function changeServer(serverName) {
-        const type = currentItem.media_type || (currentItem.title ? "movie" : "tv");
-        playMedia(type, serverName);
       }
       
       function closePlayer() {
